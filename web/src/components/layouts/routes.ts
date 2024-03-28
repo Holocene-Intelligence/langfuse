@@ -9,6 +9,7 @@ import {
   Settings,
   UsersIcon,
   PenSquareIcon,
+  TerminalIcon,
 } from "lucide-react";
 
 export type Route = {
@@ -19,6 +20,7 @@ export type Route = {
   icon?: LucideIcon; // ignored for nested routes
   pathname?: string; // link, ignored if children
   children?: Array<Route>; // folder
+  bottom?: boolean; // bottom of the sidebar, only for first level routes
 };
 
 export const ROUTES: Route[] = [
@@ -65,6 +67,12 @@ export const ROUTES: Route[] = [
     rbacScope: "prompts:read",
   },
   {
+    name: "Playground",
+    pathname: "/project/[projectId]/playground",
+    icon: TerminalIcon,
+    featureFlag: "playground",
+  },
+  {
     name: "Datasets",
     pathname: `/project/[projectId]/datasets`,
     icon: Database,
@@ -73,10 +81,12 @@ export const ROUTES: Route[] = [
     name: "Settings",
     pathname: "/project/[projectId]/settings",
     icon: Settings,
+    bottom: true,
   },
   {
     name: "Support",
     pathname: "/project/[projectId]/support",
     icon: LifeBuoy,
+    bottom: true,
   },
 ];

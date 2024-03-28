@@ -8,10 +8,13 @@ import {
 } from "@/src/server/api/interfaces/exportTypes";
 import { S3StorageService } from "@/src/server/api/services/S3StorageService";
 import { protectedProjectProcedure } from "@/src/server/api/trpc";
-import { type ObservationView } from "@prisma/client";
+import { type ObservationView } from "@langfuse/shared/src/db";
 
 import { DatabaseReadStream } from "../db/DatabaseReadStream";
-import { getAllGenerations as getAllGenerations } from "../db/getAllGenerationsSqlQuery";
+import {
+  FullObservations,
+  getAllGenerations as getAllGenerations,
+} from "../db/getAllGenerationsSqlQuery";
 import { GenerationTableOptions } from "../utils/GenerationTableOptions";
 import { transformStreamToCsv } from "./transforms/transformStreamToCsv";
 import { transformStreamToJson } from "./transforms/transformStreamToJson";
@@ -47,16 +50,16 @@ export const generationsExportQuery = protectedProjectProcedure
 
     const dbReadStream = new DatabaseReadStream<ObservationView>(
       async (pageSize: number, offset: number) => {
-        const dbReturn = await getAllGenerations({
+        const { generations } = await getAllGenerations({
           input: {
             ...input,
             filter: [...input.filter, dateCutoffFilter],
             page: offset / pageSize,
             limit: pageSize,
           },
-          selectIO: true,
+          selectIO: true, // selecting input/output data
         });
-        return dbReturn.generations;
+        return generations as unknown as FullObservations;
       },
       queryPageSize,
     );
