@@ -67,7 +67,7 @@ export default function SignIn({ authProviders }: PageProps) {
   return (
     <>
       <Head>
-        <title>Sign up | Langfuse</title>
+        <title>Sign up | PanOpticon</title>
         <meta
           name="description"
           content="Create an account, no credit card required."

@@ -62,7 +62,7 @@ export const LangfuseLogo = ({
           size === "sm" ? "text-sm" : "text-xl",
         )}
       >
-        Langfuse
+        PanOpticon
       </span>
       {version && (
         <a
@@ -70,7 +70,7 @@ export const LangfuseLogo = ({
           target="_blank"
           rel="noopener"
           title="View releases on GitHub"
-          className="ml-2 text-xs text-gray-400"
+          className="hidden ml-2 text-xs text-gray-400"
         >
           {VERSION}
         </a>

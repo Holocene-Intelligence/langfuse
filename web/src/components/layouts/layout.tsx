@@ -162,7 +162,7 @@ export default function Layout(props: PropsWithChildren) {
     <>
       <Head>
         <title>
-          {currentPathName ? `${currentPathName} | Langfuse` : "Langfuse"}
+          {currentPathName ? `${currentPathName} | PanOpticon` : "PanOpticon"}
         </title>
         <link
           rel="apple-touch-icon"
