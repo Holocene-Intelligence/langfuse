@@ -6,8 +6,8 @@ import { verifyAuthHeaderAndReturnScope } from "@/src/features/public-api/server
 import { isPrismaException } from "@/src/utils/exceptions";
 
 const DatasetRunsGetSchema = z.object({
-  name: z.string(),
-  runName: z.string(),
+  name: z.string().transform((val) => decodeURIComponent(val)),
+  runName: z.string().transform((val) => decodeURIComponent(val)),
 });
 
 export default async function handler(
@@ -79,10 +79,14 @@ export default async function handler(
           message: "Dataset run not found",
         });
 
-      const { dataset, ...run } = datasetRuns[0];
+      const { dataset, datasetRunItems, ...run } = datasetRuns[0];
 
       return res.status(200).json({
         ...run,
+        datasetRunItems: datasetRunItems.map((item) => ({
+          ...item,
+          datasetRunName: run.name,
+        })),
         datasetName: dataset.name,
       });
     } catch (error: unknown) {

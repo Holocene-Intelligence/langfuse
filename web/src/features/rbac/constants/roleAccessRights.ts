@@ -1,4 +1,4 @@
-import { type MembershipRole } from "@langfuse/shared/src/db";
+import { type MembershipRole } from "@langfuse/shared";
 
 const scopes = [
   "members:read",
@@ -20,6 +20,7 @@ const scopes = [
   "project:delete",
   "project:update",
   "project:transfer",
+  "integrations:CRUD",
 
   "datasets:CUD",
 
@@ -27,6 +28,11 @@ const scopes = [
   "prompts:read",
 
   "models:CUD",
+
+  "evalTemplate:create",
+  "evalTemplate:read",
+  "job:read",
+  "job:CUD",
 ] as const;
 
 // type string of all Resource:Action, e.g. "members:read"
@@ -40,6 +46,7 @@ export const roleAccessRights: Record<MembershipRole, Scope[]> = {
     "apiKeys:read",
     "apiKeys:create",
     "apiKeys:delete",
+    "integrations:CRUD",
     "objects:publish",
     "objects:bookmark",
     "objects:tag",
@@ -52,6 +59,10 @@ export const roleAccessRights: Record<MembershipRole, Scope[]> = {
     "prompts:CUD",
     "prompts:read",
     "models:CUD",
+    "evalTemplate:create",
+    "evalTemplate:read",
+    "job:CUD",
+    "job:read",
   ],
   ADMIN: [
     "project:update",
@@ -61,6 +72,7 @@ export const roleAccessRights: Record<MembershipRole, Scope[]> = {
     "apiKeys:read",
     "apiKeys:create",
     "apiKeys:delete",
+    "integrations:CRUD",
     "objects:publish",
     "objects:bookmark",
     "objects:tag",
@@ -70,6 +82,10 @@ export const roleAccessRights: Record<MembershipRole, Scope[]> = {
     "prompts:CUD",
     "prompts:read",
     "models:CUD",
+    "evalTemplate:create",
+    "evalTemplate:read",
+    "job:CUD",
+    "job:read",
   ],
   MEMBER: [
     "members:read",
@@ -80,6 +96,10 @@ export const roleAccessRights: Record<MembershipRole, Scope[]> = {
     "datasets:CUD",
     "prompts:CUD",
     "prompts:read",
+    "evalTemplate:create",
+    "evalTemplate:read",
+    "job:read",
+    "job:CUD",
   ],
   VIEWER: ["prompts:read"],
 };

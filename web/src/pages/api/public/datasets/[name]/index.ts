@@ -6,7 +6,7 @@ import { verifyAuthHeaderAndReturnScope } from "@/src/features/public-api/server
 import { isPrismaException } from "@/src/utils/exceptions";
 
 const DatasetsGetSchema = z.object({
-  name: z.string(),
+  name: z.string().transform((val) => decodeURIComponent(val)),
 });
 
 export default async function handler(
@@ -74,7 +74,10 @@ export default async function handler(
       const { datasetItems, datasetRuns, ...params } = dataset;
       const output = {
         ...params,
-        items: datasetItems,
+        items: datasetItems.map((item) => ({
+          ...item,
+          datasetName: dataset.name,
+        })),
         runs: datasetRuns.map((run) => run.name),
       };
 

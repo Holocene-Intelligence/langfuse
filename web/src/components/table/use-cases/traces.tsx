@@ -5,22 +5,14 @@ import { TraceTableMultiSelectAction } from "@/src/components/table/data-table-m
 import { DataTableToolbar } from "@/src/components/table/data-table-toolbar";
 import TableLink from "@/src/components/table/table-link";
 import { type LangfuseColumnDef } from "@/src/components/table/types";
-import { TagTracePopver } from "@/src/features/tag/components/TagTracePopver";
+import { TagTracePopover } from "@/src/features/tag/components/TagTracePopver";
 import { TokenUsageBadge } from "@/src/components/token-usage-badge";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import useColumnVisibility from "@/src/features/column-visibility/hooks/useColumnVisibility";
 import { useQueryFilterState } from "@/src/features/filters/hooks/useFilterState";
-import { type FilterState } from "@/src/features/filters/types";
-import { useDetailPageLists } from "@/src/features/navigate-detail-pages/context";
-import { useOrderByState } from "@/src/features/orderBy/hooks/useOrderByState";
-import {
-  TraceOptions,
-  tracesTableColsWithOptions,
-} from "@/src/server/api/definitions/tracesTable";
 import { api } from "@/src/utils/api";
 import { formatIntervalSeconds, utcDateOffsetByDays } from "@/src/utils/dates";
 import { type RouterInput, type RouterOutput } from "@/src/utils/types";
-import { type ObservationLevel, type Score } from "@langfuse/shared/src/db";
 import { type RowSelectionState } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
 import {
@@ -35,8 +27,17 @@ import { usdFormatter } from "@/src/utils/numbers";
 import { DeleteButton } from "@/src/components/deleteButton";
 import { LevelColors } from "@/src/components/level-colors";
 import { cn } from "@/src/utils/tailwind";
-import { IOCell } from "./IOCell";
-import { setSmallPaginationIfColumnsVisible } from "@/src/features/column-visibility/hooks/setSmallPaginationIfColumnsVisible";
+import { useDetailPageLists } from "@/src/features/navigate-detail-pages/context";
+import { useOrderByState } from "@/src/features/orderBy/hooks/useOrderByState";
+import {
+  type FilterState,
+  type TraceOptions,
+  tracesTableColsWithOptions,
+  type ObservationLevel,
+  type Score,
+} from "@langfuse/shared";
+import { useRowHeightLocalStorage } from "@/src/components/table/data-table-row-height-switch";
+import { IOTableCell } from "@/src/components/ui/CodeJsonViewer";
 
 export type TracesTableRow = {
   bookmarked: boolean;
@@ -124,6 +125,7 @@ export default function TracesTable({
     filter: filterState,
     searchQuery,
     orderBy: orderByState,
+    returnIO: false,
   };
   const traces = api.traces.all.useQuery(tracesAllQueryFilter);
 
@@ -189,6 +191,8 @@ export default function TracesTable({
       totalCost: trace.calculatedTotalCost ?? undefined,
     };
   };
+
+  const [rowHeight, setRowHeight] = useRowHeightLocalStorage("traces", "s");
 
   const columns: LangfuseColumnDef<TracesTableRow>[] = [
     {
@@ -466,7 +470,11 @@ export default function TracesTable({
       cell: ({ row }) => {
         const traceId: string = row.getValue("id");
         return (
-          <TracesIOCell traceId={traceId} projectId={projectId} io="input" />
+          <TracesIOCell
+            traceId={traceId}
+            io="input"
+            singleLine={rowHeight === "s"}
+          />
         );
       },
       enableHiding: true,
@@ -479,7 +487,11 @@ export default function TracesTable({
       cell: ({ row }) => {
         const traceId: string = row.getValue("id");
         return (
-          <TracesIOCell traceId={traceId} projectId={projectId} io="output" />
+          <TracesIOCell
+            traceId={traceId}
+            io="output"
+            singleLine={rowHeight === "s"}
+          />
         );
       },
       enableHiding: true,
@@ -490,7 +502,7 @@ export default function TracesTable({
       header: "Metadata",
       cell: ({ row }) => {
         const values: string = row.getValue("metadata");
-        return <div className="flex flex-wrap gap-x-3 gap-y-1">{values}</div>;
+        return <IOTableCell data={values} singleLine={rowHeight === "s"} />;
       },
       enableHiding: true,
     },
@@ -540,7 +552,7 @@ export default function TracesTable({
         const filterOptionTags = traceFilterOptions.data?.tags ?? [];
         const allTags = filterOptionTags.map((t) => t.value);
         return (
-          <TagTracePopver
+          <TagTracePopover
             tags={tags}
             availableTags={allTags}
             projectId={projectId}
@@ -573,13 +585,6 @@ export default function TracesTable({
   const [columnVisibility, setColumnVisibility] =
     useColumnVisibility<TracesTableRow>("tracesColumnVisibility", columns);
 
-  const smallTableRequired = setSmallPaginationIfColumnsVisible(
-    columnVisibility,
-    ["input", "output"],
-    paginationState,
-    setPaginationState,
-  );
-
   return (
     <div>
       <DataTableToolbar
@@ -593,19 +598,25 @@ export default function TracesTable({
         filterState={userFilterState}
         setFilterState={setUserFilterState}
         actionButtons={
-          <TraceTableMultiSelectAction
-            // Exclude traces that are not in the current page
-            selectedTraceIds={Object.keys(selectedRows).filter((traceId) =>
-              traces.data?.traces.map((t) => t.id).includes(traceId),
-            )}
-            projectId={projectId}
-            onDeleteSuccess={() => {
-              setSelectedRows({});
-            }}
-          />
+          Object.keys(selectedRows).filter((traceId) =>
+            traces.data?.traces.map((t) => t.id).includes(traceId),
+          ).length > 0 ? (
+            <TraceTableMultiSelectAction
+              // Exclude traces that are not in the current page
+              selectedTraceIds={Object.keys(selectedRows).filter((traceId) =>
+                traces.data?.traces.map((t) => t.id).includes(traceId),
+              )}
+              projectId={projectId}
+              onDeleteSuccess={() => {
+                setSelectedRows({});
+              }}
+            />
+          ) : null
         }
         columnVisibility={columnVisibility}
         setColumnVisibility={setColumnVisibility}
+        rowHeight={rowHeight}
+        setRowHeight={setRowHeight}
       />
       <DataTable
         columns={columns}
@@ -628,7 +639,6 @@ export default function TracesTable({
           pageCount: Math.ceil(Number(totalCount) / paginationState.pageSize),
           onChange: setPaginationState,
           state: paginationState,
-          options: smallTableRequired ? [10] : undefined,
         }}
         setOrderBy={setOrderByState}
         orderBy={orderByState}
@@ -636,36 +646,23 @@ export default function TracesTable({
         setRowSelection={setSelectedRows}
         columnVisibility={columnVisibility}
         onColumnVisibilityChange={setColumnVisibility}
+        rowHeight={rowHeight}
       />
     </div>
   );
 }
 
 const TracesIOCell = ({
-  projectId,
   traceId,
   io,
+  singleLine = false,
 }: {
-  projectId: string;
   traceId: string;
   io: "input" | "output";
+  singleLine?: boolean;
 }) => {
-  const trace = api.traces.all.useQuery(
-    {
-      projectId: projectId,
-      filter: [
-        {
-          column: "id",
-          type: "string",
-          operator: "=",
-          value: traceId,
-        },
-      ],
-      searchQuery: null,
-      orderBy: null,
-      page: 0,
-      limit: 1,
-    },
+  const trace = api.traces.byId.useQuery(
+    { traceId: traceId },
     {
       enabled: typeof traceId === "string",
       trpc: {
@@ -673,16 +670,15 @@ const TracesIOCell = ({
           skipBatch: true,
         },
       },
+      refetchOnMount: false, // prevents refetching loops
     },
   );
   return (
-    <IOCell
+    <IOTableCell
       isLoading={trace.isLoading}
-      data={
-        io === "output"
-          ? trace.data?.traces[0]?.output
-          : trace.data?.traces[0]?.input
-      }
+      data={io === "output" ? trace.data?.output : trace.data?.input}
+      className={cn(io === "output" && "bg-green-50")}
+      singleLine={singleLine}
     />
   );
 };
