@@ -27,6 +27,7 @@ type LLMCompletionParams = {
   modelParams: ModelParams;
   functionCall?: LLMFunctionCall;
   callbacks?: BaseCallbackHandler[];
+  apiKey?: string;
 };
 
 type FetchLLMCompletionParams = LLMCompletionParams & {
@@ -55,7 +56,8 @@ export async function fetchLLMCompletion(
 export async function fetchLLMCompletion(
   params: FetchLLMCompletionParams
 ): Promise<string | IterableReadableStream<Uint8Array> | unknown> {
-  const { messages, modelParams, streaming, callbacks } = params;
+  // the apiKey must never be printed to the console
+  const { messages, modelParams, streaming, callbacks, apiKey } = params;
   const finalMessages = messages.map((message) => {
     if (message.role === ChatMessageRole.User)
       return new HumanMessage(message.content);
@@ -68,7 +70,16 @@ export async function fetchLLMCompletion(
   let chatModel: ChatOpenAI | ChatAnthropic;
   if (modelParams.provider === ModelProvider.Anthropic) {
     chatModel = new ChatAnthropic({
-      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      anthropicApiKey: apiKey,
+      modelName: modelParams.model,
+      temperature: modelParams.temperature,
+      maxTokens: modelParams.max_tokens,
+      topP: modelParams.top_p,
+      callbacks,
+    });
+  } else if (modelParams.provider === ModelProvider.OpenAI) {
+    chatModel = new ChatOpenAI({
+      openAIApiKey: apiKey,
       modelName: modelParams.model,
       temperature: modelParams.temperature,
       maxTokens: modelParams.max_tokens,
@@ -76,14 +87,9 @@ export async function fetchLLMCompletion(
       callbacks,
     });
   } else {
-    chatModel = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: modelParams.model,
-      temperature: modelParams.temperature,
-      maxTokens: modelParams.max_tokens,
-      topP: modelParams.top_p,
-      callbacks,
-    });
+    // eslint-disable-next-line no-unused-vars
+    const _exhaustiveCheck: never = modelParams;
+    throw new Error("This model provider is not supported.");
   }
 
   console.log("Making LLM call with params: ", modelParams);

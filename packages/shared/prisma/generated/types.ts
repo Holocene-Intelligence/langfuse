@@ -199,6 +199,15 @@ export type JobExecution = {
     job_input_trace_id: string | null;
     job_output_score_id: string | null;
 };
+export type LlmApiKeys = {
+    id: string;
+    created_at: Generated<Timestamp>;
+    updated_at: Generated<Timestamp>;
+    provider: string;
+    display_secret_key: string;
+    secret_key: string;
+    project_id: string;
+};
 export type Membership = {
     project_id: string;
     user_id: string;
@@ -298,6 +307,7 @@ export type PosthogIntegration = {
     posthog_host_name: string;
     last_sync_at: Timestamp | null;
     enabled: boolean;
+    created_at: Generated<Timestamp>;
 };
 export type Pricing = {
     id: string;
@@ -424,6 +434,7 @@ export type DB = {
     events: Events;
     job_configurations: JobConfiguration;
     job_executions: JobExecution;
+    llm_api_keys: LlmApiKeys;
     membership_invitations: MembershipInvitation;
     memberships: Membership;
     models: Model;
