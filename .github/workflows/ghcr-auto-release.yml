@@ -1,5 +1,6 @@
 name: "Auto | Build Container Image | Published Release"
 
+
 on:
   push:
     branches: [main]
