@@ -298,6 +298,7 @@ export type ObservationView = {
   calculated_output_cost: string | null;
   calculated_total_cost: string | null;
   latency: number | null;
+  time_to_first_token: number | null;
 };
 export type PosthogIntegration = {
   project_id: string;
@@ -347,7 +348,7 @@ export type Prompt = {
 export type Score = {
   id: string;
   timestamp: Generated<Timestamp>;
-  project_id: string | null;
+  project_id: string;
   name: string;
   value: number;
   source: ScoreSource;

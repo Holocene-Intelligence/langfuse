@@ -33,6 +33,7 @@ import {
   AccordionTrigger,
 } from "@/src/components/ui/accordion";
 import { usePostHogClientCapture } from "@/src/features/posthog-analytics/usePostHogClientCapture";
+import { isEeAvailable } from "@langfuse/ee";
 
 export const PromptDetail = () => {
   const projectId = useProjectIdFromURL();
@@ -112,21 +113,23 @@ export const PromptDetail = () => {
               <>
                 <SetPromptVersionLabels prompt={prompt} />
 
-                <Button
-                  variant="outline"
-                  title="Test in prompt playground"
-                  size="icon"
-                  onClick={() =>
-                    capture("prompt_detail:test_in_playground_button_click")
-                  }
-                  asChild
-                >
-                  <Link
-                    href={`/project/${projectId}/playground?promptId=${encodeURIComponent(prompt.id)}`}
+                {isEeAvailable && (
+                  <Button
+                    variant="outline"
+                    title="Test in prompt playground"
+                    size="icon"
+                    onClick={() =>
+                      capture("prompt_detail:test_in_playground_button_click")
+                    }
+                    asChild
                   >
-                    <Terminal className="h-5 w-5" />
-                  </Link>
-                </Button>
+                    <Link
+                      href={`/project/${projectId}/playground?promptId=${encodeURIComponent(prompt.id)}`}
+                    >
+                      <Terminal className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                )}
 
                 <Button
                   variant="outline"
@@ -228,12 +231,14 @@ export const PromptDetail = () => {
                 Generations using this prompt version
               </AccordionTrigger>
               <AccordionContent>
-                <Generations
-                  projectId={prompt.projectId}
-                  promptName={prompt.name}
-                  promptVersion={prompt.version}
-                  omittedFilter={["Prompt Name", "Prompt Version"]}
-                />
+                <div className="flex max-h-[calc(100vh-20rem)] flex-col">
+                  <Generations
+                    projectId={prompt.projectId}
+                    promptName={prompt.name}
+                    promptVersion={prompt.version}
+                    omittedFilter={["Prompt Name", "Prompt Version"]}
+                  />
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
